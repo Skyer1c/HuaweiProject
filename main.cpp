@@ -4,11 +4,6 @@
 #include "berth.h"
 using namespace std;
 
-struct Boat
-{
-    int num, pos, status;
-}boat[10];
-
 void check_goods() {
     for (int i = mygoods[0].nxt; i; i = mygoods[i].nxt) {
         mygoods[i].tim--;

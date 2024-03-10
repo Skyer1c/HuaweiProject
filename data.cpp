@@ -11,6 +11,7 @@ int cnt;
 
 Robot robot[robot_num + 10];
 Berth berth[berth_num + 10];
+Boat boat[10];
 Place mygoods[150015];
 
 bool check(int x, int y) {

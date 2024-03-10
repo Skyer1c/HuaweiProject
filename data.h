@@ -2,6 +2,7 @@
 #define DATA_H
 #include "robot.h"
 #include "berth.h"
+#include "boat.h"
 
 const int n = 200;
 const int robot_num = 10;
@@ -19,6 +20,7 @@ extern int cnt;
 
 extern Robot robot[robot_num + 10];
 extern Berth berth[berth_num + 10];
+extern Boat boat[10];
 
 bool check(int x, int y);
 

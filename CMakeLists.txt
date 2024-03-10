@@ -13,4 +13,5 @@ ADD_EXECUTABLE(main ${src}
     robot.h robot.cpp
     data.h data.cpp
     berth.h berth.cpp
+    boat.h boat.cpp
     )
