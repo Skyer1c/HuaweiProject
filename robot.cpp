@@ -64,12 +64,18 @@ int Robot::move() {
             return dir;
         }
         else {
+            int rand_dir[5], rand_cnt = 0;
             for (int i = 0; i < 4; i++) {
                 if (i == dir) continue;
                 if (check(x + mx[i], y + my[i])) {
-                    vis[x + mx[i]][y + my[i]] = 1;
-                    return i;
+                    rand_dir[++rand_cnt] = i;
                 }
+            }
+            if (rand_cnt) {
+                int i = rand() % rand_cnt + 1;
+                i = rand_dir[i];
+                vis[x + mx[i]][y + my[i]] = 1;
+                return i;
             }
         }
     }
@@ -96,12 +102,14 @@ int Robot::move() {
         }
         //如果碰壁，前面一定是机器人，此时选择往后退回溯到上一个位置（如果可以）让位
         if (index) { //可以让位
-            index--;
-            dir = search_dir[index];
+            dir = search_dir[index - 1];
             if (dir <= 1) dir = 1 - dir;
             else dir = 5 - dir;
-            vis[x + mx[dir]][y + my[dir]] = 1;
-            return dir;
+            if (check(x + mx[dir], y + my[dir])) {
+                vis[x + mx[dir]][y + my[dir]] = 1;
+                index--;
+                return dir;
+            }
         }
     }
     vis[x][y] = 1; //不移动的话把这个位置占住
