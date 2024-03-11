@@ -17,11 +17,11 @@ void bfs(int id) { //bfs预处理
     memset(vis, 0, sizeof(vis));
     for (int i = 0; i <= 3; i++) {
         q.push(Place(x, y + i, 0)), q.push(Place(x + 3, y + i, 0));
-        vis[x][y + i] = vis[x + 3][y + i] = 0;
+        vis[x][y + i] = vis[x + 3][y + i] = 1;
     }
     for (int i = 1; i <= 2; i++) {
         q.push(Place(x + i, y, 0)), q.push(Place(x + i, y + 3, 0));
-        vis[x + i][y] = vis[x + i][y + 3] = 0;
+        vis[x + i][y] = vis[x + i][y + 3] = 1;
     }
     while (!q.empty()) {
         Place cur = q.front(); q.pop();
@@ -90,22 +90,25 @@ int Input() //每次交互输入
 
 int main()
 {
-    //freopen("output.txt", "r", stdin);
-    //freopen("test.txt", "w", stdout);
+    // freopen("output.txt", "r", stdin);
+    // freopen("test.txt", "w", stdout);
     Init();
     for(int zhen = 1; zhen <= 15000; zhen ++)
     {
         memset(vis, 0, sizeof(vis));
+        
         int id = Input();
         //printf("id: %d\n", id);
         for(int i = 0; i < robot_num; i ++) {
             robot[i].getgoods(); //尝试获取货物
             robot[i].pullgoods(); //尝试放下货物
+            robot[i].update();
             //printf("nowid: %d %d\n", i, robot[i].id);
             int dir = robot[i].move();
             if (dir != -1) printf("move %d %d\n", i, dir); //尝试移动
             robot[i].getgoods(); //尝试获取货物
             robot[i].pullgoods(); //尝试放下货物
+            robot[i].update();
         }
         /*
         for (int i = 0; i < berth_num; i++) { //泊位
