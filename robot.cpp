@@ -41,8 +41,10 @@ void Robot::update() {
                 idd = i;
             }
         }
-        mygoods[idd].dis = -1;
-        start_searching(mygoods[idd].x, mygoods[idd].y);
+        if (idd != 1919810) { //记得判断未找到货物的情况，idd是1919810会炸掉
+            mygoods[idd].dis = -1;
+            start_searching(mygoods[idd].x, mygoods[idd].y);
+        }
     }
     if (searching == 1 && x == mbx && y == mby) { //已到达泊位起始点
         searching = 2;
