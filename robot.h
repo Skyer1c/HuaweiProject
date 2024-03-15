@@ -6,7 +6,7 @@ using namespace std;
 class Robot
 {
 public:
-    int x, y, goods, id;
+    int x, y, goods, id, bid, goods_value;
     int searching, index; //是否正在逆序寻找货物 0否 1前往泊位精确格子 2正在逆序 index: 当前方向
     int status;
     int mbx, mby; //泊位目标格子

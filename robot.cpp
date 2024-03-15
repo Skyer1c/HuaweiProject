@@ -5,9 +5,9 @@
 void Robot::start_searching(int gx, int gy) {
     //printf("start! %d %d\n", gx, gy);
     search_dir.clear();
-    while (direction[gx][gy][id][1]) {
+    while (direction[gx][gy][bid][1]) {
         //printf("start: %d %d %d\n", gx, gy, direction[gx][gy][id][1]);
-        int dir = direction[gx][gy][id][0];
+        int dir = direction[gx][gy][bid][0];
         gx += mx[dir], gy += my[dir];
         if (dir <= 1) dir = 1 - dir;
         else dir = 5 - dir;
@@ -23,7 +23,8 @@ void Robot::update() {
         return;
     }
     if (ch[x][y] == 'B' && !searching) { //在泊位上但是没有货物，就搜索货物
-        int mindis = 114514, idd = 1919810;
+        double maxval = -114514;
+        int idd = 1919810;
         int berthid = -1; //保证这是对应的泊位
         for (int i = 0; i < berth_num; i++) {
             int cx = berth[i].x, cy = berth[i].y;
@@ -31,13 +32,13 @@ void Robot::update() {
                 berthid = i; break;
             }
         }
-        if (berthid != id) return;
+        if (berthid != bid) return;
         for (int i = mygoods[0].nxt; i; i = mygoods[i].nxt) {
             int gx = mygoods[i].x, gy = mygoods[i].y, tim = mygoods[i].tim;
-            if (mygoods[i].dis == -1 || !direction[gx][gy][id][1]) continue; //货物被其他机器人预定，或无法到达
+            if (mygoods[i].dis == -1 || !direction[gx][gy][bid][1]) continue; //货物被其他机器人预定，或无法到达
             //printf("check_dir\n");
-            if (direction[gx][gy][id][1] + 16 <= tim && direction[gx][gy][id][1] < mindis) { //能够在刷新前取得货物
-                mindis = direction[gx][gy][id][1];
+            if (direction[gx][gy][bid][1] + 16 <= tim && (double)(mygoods[i].dis / direction[gx][gy][bid][1]) > maxval) { //能够在刷新前取得货物
+                maxval = (double)(mygoods[i].dis / direction[gx][gy][bid][1]);
                 idd = i;
             }
         }
@@ -49,7 +50,7 @@ void Robot::update() {
     if (searching == 1 && x == mbx && y == mby) { //已到达泊位起始点
         searching = 2;
     }
-    if (searching == 2 && index == search_dir.size()) { //已走完逆向道路
+    if (searching == 2 && !search_dir.size()) { //已走完逆向道路
         searching = 0;
     }
     //printf("robot_update: %d %d %d %d %d %d %c\n", id, goods, searching, search_dir.size(), x, y, ch[x][y]);
@@ -59,7 +60,7 @@ void Robot::update() {
 int Robot::move() {
     vis[x][y] = 0;
     if (goods || !searching) { //有货物或者没目标，都是前往泊位再决定
-        int min_dis = 114514, dir = direction[x][y][id][0]; //直接去对应的泊位
+        int min_dis = 114514, dir = direction[x][y][bid][0]; //直接去对应的泊位
         //printf("goods: %d %d\n", dir, check(x + mx[dir], y + my[dir]));
         if (check(x + mx[dir], y + my[dir])) {
             vis[x + mx[dir]][y + my[dir]] = 1;
@@ -94,24 +95,45 @@ int Robot::move() {
             vis[x + mx[dir_y]][y + my[dir_y]] = 1;
             return dir_y;
         }
+        //随机方向避免碰撞
+        int rand_dir[5], rand_cnt = 0;
+        for (int i = 0; i < 4; i++) {
+            if (i == dir_x || i == dir_y) continue;
+            if (check(x + mx[i], y + my[i])) {
+                rand_dir[++rand_cnt] = i;
+            }
+        }
+        if (rand_cnt) {
+            int i = rand() % rand_cnt + 1;
+            i = rand_dir[i];
+            vis[x + mx[i]][y + my[i]] = 1;
+            return i;
+        }
     }
     else if (searching == 2) { //正在逆序前往货物位置
-        int dir = search_dir[index];
+        int dir = search_dir.front();
         if (check(x + mx[dir], y + my[dir])) {
             vis[x + mx[dir]][y + my[dir]] = 1;
-            index++;
+            search_dir.pop_front();
             return dir;
         }
         //如果碰壁，前面一定是机器人，此时选择往后退回溯到上一个位置（如果可以）让位
-        if (index) { //可以让位
-            dir = search_dir[index - 1];
-            if (dir <= 1) dir = 1 - dir;
-            else dir = 5 - dir;
-            if (check(x + mx[dir], y + my[dir])) {
-                vis[x + mx[dir]][y + my[dir]] = 1;
-                index--;
-                return dir;
+        //采用随机方向避免碰撞
+        int rand_dir[5], rand_cnt = 0;
+        for (int i = 0; i < 4; i++) {
+            if (check(x + mx[i], y + my[i])) {
+                rand_dir[++rand_cnt] = i;
             }
+        }
+        if (rand_cnt) {
+            int i = rand() % rand_cnt + 1;
+            i = rand_dir[i];
+            vis[x + mx[i]][y + my[i]] = 1;
+            //把这个移动方向加入方向队列中，便于之后找回道路
+            if (i <= 1) dir = 1 - i;
+            else dir = 5 - i;
+            search_dir.push_front(dir);
+            return i;
         }
     }
     vis[x][y] = 1; //不移动的话把这个位置占住
@@ -121,7 +143,7 @@ int Robot::move() {
 void Robot::getgoods() { //捡起货物
     if (goods) return;
     if (gds[x][y][0]) {
-        goods = gds[x][y][0];
+        goods_value = gds[x][y][0];
         printf("get %d\n", id);
         del(gds[x][y][1]);
     }
@@ -136,8 +158,10 @@ void Robot::pullgoods() { //放下货物
                 idd = i; break;
             }
         }
-        berth[idd].val += goods;
-        goods = 0;
-        printf("pull %d\n", id);
+        if (idd != -1) {
+            berth[idd].update_goods(goods_value);
+            goods = 0;
+            printf("pull %d\n", id);
+        }
     }
 }

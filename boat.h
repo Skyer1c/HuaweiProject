@@ -17,7 +17,7 @@ public:
     void filled();//改变船的状态，使其从未装满状态更新为装满状态
     bool filled_flag();//返回一个信号，真则船已经载满货物
     bool available();//返回一个信号，真则船处于空闲状态
-    bool working();//返回一个信号，真则船处于运输状态
+    bool working(int x);//返回一个信号，真则船处于运输状态
     void start_ship(int x);//执行start_ship，读取执行start_ship指令的时间点
     void start_go(int x);//执行go_ship，读取执行go_ship指令的时间点
     void update(int x);//读取当前时刻，准备与arrival_time比较，更新航行状态

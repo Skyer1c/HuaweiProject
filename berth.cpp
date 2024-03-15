@@ -3,34 +3,49 @@
 #include "robot.h"
 #include "data.h"
 //伪代码
-void berth::update_robot(){
-    if(robot_pullgoods);//如果有机器人在泊位内并且执行pull指令卸货
-    berth_value.push(robot.goods);//将当前机器人货物的价值存入队列
+
+Berth::Berth() { //初始化
+    cur_boat = -1;
 }
 
-void berth::update_boat(){
-    if(boat_leave){//如果当前船只驶离泊位
-        boat_id=-1;
-        boat_occupy_time=transport_time;//根据当前泊位到虚拟点占用离开船只的时间（期间船只送货，不可用）
-    }
-    if(boat_arrive){
-        boat_id;//这里记录驶入泊位船只信息
-    }
+void Berth::update_goods(int val){
+    berth_value.push(val);//将当前机器人货物的价值存入队列
+    tot_val += val; //加入总价值
 }
 
-void berth::load(){
-    if(cur_boat!=-1){//当前泊位有船
-        while(boat[]_current_capacity<=boat[]_max_capacity&&!berth_value.empty()){//如果当前船只还未装满,且仍有货物可装时
-            for(int i=1;i<=loading_speed;i++){//每一帧按照泊位速度装载货物
-                int temp_val=berth_value.top();
-                if(current_capacity+temp_val<=max_capacity){//轮船未满时就装载货物
-                    boat_val+=temp_val;
-                    berth_value.pop();
-                }
-                else break;//此时船装满了，停止装载（可能要返回一些指示信息？）
+void Berth::update_boat(int boat_id){ //由船给它信息
+    cur_boat = boat_id;
+    // printf("update_boat_berth: %d\n", cur_boat);
+}
+
+void Berth::loading(){
+    // printf("boat %d\n", cur_boat);
+    if (cur_boat != -1) {//当前泊位有船
+        Boat &cur = boat[cur_boat];
+        // printf("cur_boat: %d %d\n", cur_boat, cur.current_capacity());
+        for (int i = 1; i <= loading_speed; i++) {//每一帧按照泊位速度装载货物
+            if (berth_value.empty()) break;                
+            int temp_val=berth_value.front();
+            if (cur.current_capacity() + 1 <= boat_capacity) {//轮船未满时就装载货物
+                cur.load(temp_val);
+                berth_value.pop();
+                tot_val -= temp_val;
+            }
+            else {
+                cur.filled(); //装满信号
+                break;//此时船装满了，停止装载（可能要返回一些指示信息？）
             }
         }
+        if (berth_value.empty()) cur.filled(); //没东西了让船先走
     }
+}
+
+int Berth::boat_flag() {
+    return cur_boat;
+}
+
+int Berth::goods_flag() {
+    return berth_value.size();
 }
 
 /*
